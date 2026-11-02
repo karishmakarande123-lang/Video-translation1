@@ -1,0 +1,16 @@
+{
+  "corpus_bleu_baseline": 1.897876527650772,
+  "corpus_bleu_enhanced": 1.742852179867049,
+  "corpus_chrf_baseline": 29.455608606822935,
+  "corpus_chrf_enhanced": 21.13292965847734,
+  "mean_mcd_db_baseline": 6.4,
+  "mean_mcd_db_enhanced": 7.1,
+  "mean_f0_rmse_hz_baseline": 24.21,
+  "mean_f0_rmse_hz_enhanced": 43.3,
+  "mean_f0_corr_baseline": 0.8459999999999999,
+  "mean_f0_corr_enhanced": 0.7636,
+  "mean_speaker_sim_baseline": 0.8461000000000001,
+  "mean_speaker_sim_enhanced": 0.3069,
+  "duration_compliance_rate_baseline": 0.0,
+  "duration_compliance_rate_enhanced": 1.0
+}

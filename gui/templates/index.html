@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EN → MR Speech-to-Speech Translation</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <h1>English → Marathi Speech-to-Speech Translation</h1>
+    <p class="subtitle">Cascaded baseline: faster-whisper ASR → IndicTrans2 MT → IndicF5 TTS (reference-audio voice cloning)</p>
+    <p class="subtitle"><a href="/report">View validation report & figures →</a></p>
+
+    <form id="run-form">
+      <fieldset>
+        <legend>1. English source speech</legend>
+        <input type="file" id="audio-file" name="audio" accept="audio/*">
+        <div class="or">— or —</div>
+        <button type="button" id="record-btn">● Record</button>
+        <span id="record-status"></span>
+      </fieldset>
+
+      <fieldset>
+        <legend>2. Marathi reference speaker (voice to clone)</legend>
+        <input type="file" id="ref-audio-file" name="ref_audio" accept="audio/*" required>
+        <label for="ref-text">Reference transcript (recommended)</label>
+        <textarea id="ref-text" name="ref_text" rows="2"
+          placeholder="Exact Marathi transcript of the reference clip above. If left blank, it is auto-transcribed on CPU (lower fidelity)."></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>3. Mode</legend>
+        <label><input type="radio" name="mode" value="baseline" checked> Baseline only (ASR → MT → TTS)</label>
+        <label>
+          <input type="radio" name="mode" value="baseline+research">
+          Baseline + Prosody + Isochrony <em>(DSP baseline — see <a href="/report">report</a> for what this means)</em>
+        </label>
+      </fieldset>
+
+      <button type="submit" id="run-btn">Run Pipeline</button>
+    </form>
+
+    <section id="progress" hidden>
+      <h2>Progress</h2>
+      <ul class="stages">
+        <li id="stage-asr" data-stage="asr"><span class="dot"></span> ASR (English speech → text)</li>
+        <li id="stage-mt" data-stage="mt"><span class="dot"></span> MT (English → Marathi text)</li>
+        <li id="stage-tts" data-stage="tts"><span class="dot"></span> TTS (Marathi text → cloned speech)</li>
+        <li id="stage-research" data-stage="research"><span class="dot"></span> Prosody + Isochrony (DSP baseline)</li>
+      </ul>
+    </section>
+
+    <section id="results" hidden>
+      <h2>Results</h2>
+      <div class="result-block">
+        <label>ASR output (English text)</label>
+        <p id="out-asr"></p>
+      </div>
+      <div class="result-block">
+        <label>MT output (Marathi text)</label>
+        <p id="out-mt" lang="mr"></p>
+      </div>
+      <div class="result-block">
+        <label>Synthesized Marathi speech</label>
+        <audio id="out-audio" controls></audio>
+      </div>
+      <div class="result-block" id="baseline-audio-block" hidden>
+        <label>Baseline TTS (before prosody/isochrony enhancement)</label>
+        <audio id="out-audio-baseline" controls></audio>
+      </div>
+      <div class="result-block">
+        <label>Metrics</label>
+        <p id="out-metrics" class="muted">Not available yet — requires eval/ modules (not implemented in this baseline).</p>
+      </div>
+      <div class="result-block">
+        <label>Stage timings</label>
+        <p id="out-timings" class="muted"></p>
+      </div>
+    </section>
+
+    <p id="error-box" class="error" hidden></p>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

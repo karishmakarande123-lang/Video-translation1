@@ -1,0 +1,120 @@
+/* gui/static/style.css — minimal styling for the local S2ST demo page */
+
+:root {
+  color-scheme: light dark;
+  --fg: #1a1a1a;
+  --bg: #fafafa;
+  --border: #ddd;
+  --accent: #2b6cb0;
+  --muted: #6b7280;
+  --pending: #9ca3af;
+  --running: #d69e2e;
+  --done: #38a169;
+  --error: #c53030;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e5e5e5;
+    --bg: #14161a;
+    --border: #333;
+    --accent: #63a4ff;
+    --muted: #9aa0a6;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding: 2rem 1rem;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+.subtitle { color: var(--muted); margin-top: 0; margin-bottom: 1.5rem; font-size: 0.9rem; }
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+legend { padding: 0 0.4rem; font-weight: 600; }
+
+label { display: block; margin: 0.5rem 0 0.25rem; font-size: 0.9rem; }
+label.disabled { color: var(--muted); }
+
+textarea, input[type="text"] {
+  width: 100%;
+  font-family: inherit;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+.or { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0; }
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#record-btn { background: #b83280; margin-top: 0.5rem; }
+#record-btn.recording { background: var(--error); }
+#record-status { margin-left: 0.5rem; font-size: 0.85rem; color: var(--muted); }
+
+#run-btn { width: 100%; padding: 0.7rem; font-size: 1rem; margin-top: 0.5rem; }
+
+.stages { list-style: none; padding: 0; }
+.stages li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.stages li.running { color: var(--running); font-weight: 600; }
+.stages li.done { color: var(--done); }
+.stages li.error { color: var(--error); }
+
+.dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--pending);
+  flex-shrink: 0;
+}
+.running .dot { background: var(--running); }
+.done .dot { background: var(--done); }
+.error .dot { background: var(--error); }
+
+.result-block { margin-bottom: 1rem; }
+.result-block p { margin: 0.2rem 0; }
+.muted { color: var(--muted); font-size: 0.85rem; }
+
+audio { width: 100%; }
+
+.error {
+  background: rgba(197, 48, 48, 0.1);
+  border: 1px solid var(--error);
+  color: var(--error);
+  border-radius: 6px;
+  padding: 0.6rem;
+}

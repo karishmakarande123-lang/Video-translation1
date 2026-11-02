@@ -1,0 +1,11 @@
+sample,domain,sentence_id,bleu_baseline,bleu_enhanced,chrf_baseline,chrf_enhanced,mcd_baseline_db,mcd_enhanced_db,f0_rmse_baseline_hz,f0_rmse_enhanced_hz,f0_corr_baseline,f0_corr_enhanced,duration_ratio_baseline,duration_ratio_enhanced,compliant_baseline,compliant_enhanced,speaker_sim_baseline,speaker_sim_enhanced
+1,AGRICULTURE,IISc_SYSPINProject_mr_f_AGRI_01470,2.29,2.15,27.62,23.45,6.42,7.29,16.8,37.0,0.899,0.826,0.462,1.0,False,True,0.838,0.304
+2,BOOKS,IISc_SYSPINProject_mr_f_BOOK_02165,3.24,0.0,31.56,0.0,6.5,7.34,21.3,40.8,0.868,0.752,0.455,1.0,False,True,0.774,0.216
+3,EDUCATION,IISc_SYSPINProject_mr_f_EDUC_02784,2.39,2.41,30.33,19.98,6.52,7.45,32.4,64.5,0.838,0.614,0.593,1.0,False,True,0.832,0.308
+4,EVALUATION,IISc_SYSPINProject_mr_f_EVAL_00246,2.52,2.16,31.0,20.77,6.35,7.08,22.6,39.9,0.876,0.836,0.597,1.0,False,True,0.873,0.315
+5,FINANCE,IISc_SYSPINProject_mr_f_FINA_00635,3.72,3.38,36.8,30.75,6.08,6.87,19.7,40.1,0.881,0.783,0.517,1.0,False,True,0.896,0.309
+6,GENERAL,IISc_SYSPINProject_mr_f_GENE_01680,0.0,8.1,0.0,25.44,6.18,7.02,21.0,34.8,0.834,0.799,0.607,1.0,False,True,0.857,0.352
+7,HEALTH,IISc_SYSPINProject_mr_f_HEAL_00336,11.98,6.3,40.63,36.06,6.76,7.11,35.5,37.4,0.738,0.816,0.394,1.0,False,True,0.828,0.306
+8,OTHERS,IISc_SYSPINProject_mr_f_OTHE_01721,2.28,0.0,30.7,0.0,6.32,6.94,35.1,48.4,0.721,0.663,0.492,1.0,False,True,0.869,0.297
+9,POLITICS,IISc_SYSPINProject_mr_f_POLI_02661,4.55,4.48,28.76,21.46,6.67,7.16,14.4,47.8,0.932,0.732,0.492,1.0,False,True,0.844,0.326
+10,WEATHER,IISc_SYSPINProject_mr_f_WEAT_02223,3.42,2.66,37.49,29.45,6.2,6.74,23.3,42.3,0.873,0.815,0.525,1.0,False,True,0.85,0.336

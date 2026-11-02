@@ -1,0 +1,86 @@
+# requirements.txt
+# ---------------------------------------------------------------------------
+# Baseline pipeline dependencies (ASR + MT + TTS). Install torch FIRST with
+# the CUDA 12.1 wheel matching the RTX 3060 Laptop (6GB VRAM):
+#
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+#   pip install -r requirements.txt
+#
+# If IndicTransToolkit isn't resolvable from PyPI in your environment, use:
+#   pip install git+https://github.com/VarunGumma/IndicTransToolkit.git
+# ---------------------------------------------------------------------------
+
+# core — numpy capped to match ai4bharat's IndicF5 requirements.txt (their
+# f5_tts fork pins numpy<=1.26.4); numpy 2.x isn't tested against it.
+pyyaml>=6.0
+numpy>=1.24,<=1.26.4
+soundfile>=0.12
+
+# ASR
+faster-whisper>=1.0.0
+
+# MT (IndicTrans2) — pinned exactly, not a range. Two independent breaks
+# were hit empirically against this custom (trust_remote_code) model:
+#   - transformers 5.x removes PreTrainedTokenizerBase from
+#     transformers.tokenization_utils, which IndicTransToolkit's collator
+#     imports directly -> ImportError.
+#   - transformers >=~4.46 wraps past_key_values in a Cache object even on
+#     the first decode step during generate()/beam search; IndicTrans2's
+#     modeling_indictrans.py still assumes the legacy tuple format
+#     (past_key_values[0][0].shape[2]) -> AttributeError: NoneType has no
+#     attribute 'shape'. 4.44.2 is confirmed working end-to-end.
+transformers==4.44.2
+sentencepiece>=0.1.99
+IndicTransToolkit>=1.0.3
+
+# TTS (IndicF5) — the model.py pulled in by trust_remote_code calls
+# f5_tts.infer.utils_infer.load_model() WITHOUT a ckpt_path argument. The
+# real PyPI package `f5-tts` (SWivid/F5-TTS) made ckpt_path a required
+# positional arg, so `pip install f5-tts` breaks IndicF5 with:
+#   TypeError: load_model() missing 1 required positional argument: 'ckpt_path'
+# ai4bharat ships their own fork (also importable as `f5_tts`) with a
+# compatible signature — install THAT instead of PyPI's f5-tts:
+#   pip install git+https://github.com/AI4Bharat/IndicF5.git
+# (this is a known, widely-reported upstream issue, not specific to this
+# project — see https://huggingface.co/ai4bharat/IndicF5/discussions/16)
+#
+# SEPARATELY: even with the above fixed, transformers.from_pretrained()'s
+# key-matching fails to bind ~16 parameters (GRN scale/shift in the DiT
+# text embedding, ConvNeXt layer-scale gamma in the vocoder) because
+# model.py wraps submodules in torch.compile() inside __init__. Left
+# unpatched, the model produces incoherent noise (verified: feeding output
+# back through faster-whisper gave hallucinated garbage, not degraded
+# speech), even though model.safetensors has correct trained values under
+# the exact same key names. baseline/tts.py works around this with a
+# second direct state_dict load — see TTSStage._patch_undertrained_weights.
+accelerate>=0.27.0
+einops>=0.7.0
+librosa>=0.10.1
+safetensors>=0.4.2
+git+https://github.com/AI4Bharat/IndicF5.git
+
+# GUI
+flask>=3.0.0
+
+# Prosody / isochrony (DSP baseline — see prosody/transfer.py,
+# isochrony/rate_controller.py; NOT the trained neural mapping network
+# from the original spec, see TECHNICAL_REPORT.md §6/§7)
+pyworld>=0.3.4
+
+# eval/ — formal metrics (BLEU/chrF++, MCD, F0-RMSE/correlation, ECAPA
+# speaker similarity, duration compliance). speechbrain's EncoderClassifier
+# defaults to SYMLINK on Windows, which needs elevated privileges and fails
+# without Developer Mode — eval/speaker_sim.py passes
+# local_strategy=LocalStrategy.COPY to force plain file copies instead
+# (confirmed empirically: OSError: [WinError 1314]).
+sacrebleu>=2.4.0
+speechbrain>=1.0.0
+# pysptk — proper mel-cepstral coefficient extraction for eval/mcd.py.
+# Do NOT compute MCD from librosa.feature.mfcc() — confirmed empirically
+# that its dB-scale DCT coefficients aren't the feature space the standard
+# MCD formula assumes, producing nonsense values (300-500dB instead of the
+# expected single/low-double digits). pyworld (spectral envelope) +
+# pysptk.sp2mc (mel-cepstral conversion) gives the correct SPTK-convention
+# coefficients. Builds from source on Windows (needs a C compiler) but
+# installed cleanly here with no extra setup.
+pysptk>=0.1.21

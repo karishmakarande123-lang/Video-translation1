@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Validation Report — EN → MR S2ST</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .report-fig { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; margin: 0.5rem 0 1.5rem; }
+    .report-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 2rem; }
+    .report-table th, .report-table td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    .report-table th { background: rgba(128,128,128,0.08); }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; }
+    .missing-fig { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back-link" href="/">← Back to demo</a>
+    <h1>Validation Report</h1>
+    <p class="subtitle">
+      Figures and results from debugging/validating the TTS stage. See
+      <code>TECHNICAL_REPORT.md</code> in the project root for full write-up.
+    </p>
+
+    <h2>1. TTS clipping fix: before / after</h2>
+    <p class="muted">
+      IndicF5's raw output routinely exceeds ±1.0; writing that straight to
+      16-bit PCM WAV hard-clips it. Peak-normalizing only when needed fixed
+      94-97% clipping down to 0%.
+    </p>
+    {% if 'clipping_waveform_comparison.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='clipping_waveform_comparison.png') }}" alt="Waveform before/after clipping fix">
+    {% else %}
+      <p class="missing-fig">clipping_waveform_comparison.png not found — run `python -m scripts.generate_report_figures`.</p>
+    {% endif %}
+    {% if 'clipping_spectrogram_comparison.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='clipping_spectrogram_comparison.png') }}" alt="Mel-spectrogram before/after clipping fix">
+    {% else %}
+      <p class="missing-fig">clipping_spectrogram_comparison.png not found — run `python -m scripts.generate_report_figures`.</p>
+    {% endif %}
+
+    <h2>2. 10-sample TTS validation</h2>
+    <p class="muted">
+      One cloned reference voice, 10 real Marathi sentences (one per topic
+      domain, IISc SYSPIN dataset). Round-trip ASR transcription is a
+      qualitative sanity check, not a formal WER/ASR-BLEU metric — see
+      TECHNICAL_REPORT.md §4.2 for an important caveat about apparent
+      reference-content leakage affecting the word-overlap numbers below.
+    </p>
+    {% if 'tts_validation_10samples.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='tts_validation_10samples.png') }}" alt="10-sample validation chart">
+    {% else %}
+      <p class="missing-fig">tts_validation_10samples.png not found.</p>
+    {% endif %}
+
+    {% if validation_rows %}
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Domain</th><th>Input text</th><th>Duration (s)</th>
+          <th>Peak</th><th>RMS</th><th>Clipped %</th><th>Word overlap %</th>
+          <th>Round-trip ASR</th><th>Audio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in validation_rows %}
+        <tr>
+          <td>{{ row.sample }}</td>
+          <td>{{ row.domain }}</td>
+          <td lang="mr">{{ row.input_text }}</td>
+          <td>{{ row.duration_sec }}</td>
+          <td>{{ row.peak }}</td>
+          <td>{{ row.rms }}</td>
+          <td>{{ row.clipped_pct }}</td>
+          <td>{{ row.word_overlap_pct }}</td>
+          <td lang="mr">{{ row.roundtrip_asr }}</td>
+          <td>
+            <audio controls preload="none" style="width: 160px;">
+              <source src="{{ url_for('report_asset', dir_key='samples', filename=row.output_path.split('\\')[-1].split('/')[-1]) }}" type="audio/wav">
+            </audio>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="missing-fig">
+      No validation results found — run `python -m scripts.generate_tts_validation_samples`.
+    </p>
+    {% endif %}
+
+    <h2>3. Prosody + Isochrony (DSP baseline)</h2>
+    <p class="muted">
+      "Baseline + Prosody + Isochrony" mode applies a DSP baseline, NOT a
+      trained neural mapping network (no parallel EN-MR prosody training
+      data exists yet) — see TECHNICAL_REPORT.md §6 for what this is and
+      isn't. Prosody: rescales the TTS output's F0 register to match the
+      source English audio's pitch statistics (WORLD analysis-resynthesis),
+      plus loudness matching. Isochrony: time-stretches output to the
+      source's duration if outside +/-15% tolerance.
+    </p>
+    {% if 'prosody_transfer_f0_comparison.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='prosody_transfer_f0_comparison.png') }}" alt="F0 contour comparison: source vs baseline vs enhanced">
+    {% else %}
+      <p class="missing-fig">prosody_transfer_f0_comparison.png not found.</p>
+    {% endif %}
+
+    {% if research_stats %}
+    <table class="report-table">
+      <thead><tr><th></th><th>Source (English)</th><th>Baseline TTS</th><th>Enhanced TTS</th></tr></thead>
+      <tbody>
+        <tr><td>F0 mean (Hz)</td><td>{{ "%.1f"|format(research_stats.source_f0_mean_hz) }}</td><td>{{ "%.1f"|format(research_stats.baseline_f0_mean_hz) }}</td><td>{{ "%.1f"|format(research_stats.enhanced_f0_mean_hz) }}</td></tr>
+        <tr><td>Duration (s)</td><td>{{ "%.2f"|format(research_stats.source_duration_sec) }}</td><td>{{ "%.2f"|format(research_stats.baseline_duration_sec) }}</td><td>{{ "%.2f"|format(research_stats.enhanced_duration_sec) }}</td></tr>
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% if research_audio_available %}
+    <div class="result-block">
+      <label>Listen: source (English)</label>
+      <audio controls preload="none" style="width:100%"><source src="{{ url_for('report_asset', dir_key='research', filename='source_english.wav') }}" type="audio/wav"></audio>
+      <label>Listen: baseline TTS (Marathi)</label>
+      <audio controls preload="none" style="width:100%"><source src="{{ url_for('report_asset', dir_key='research', filename='baseline.wav') }}" type="audio/wav"></audio>
+      <label>Listen: enhanced TTS (prosody + isochrony)</label>
+      <audio controls preload="none" style="width:100%"><source src="{{ url_for('report_asset', dir_key='research', filename='enhanced.wav') }}" type="audio/wav"></audio>
+    </div>
+    {% else %}
+    <p class="missing-fig">
+      No research-mode comparison audio found — run the pipeline in "Baseline + Prosody + Isochrony" mode from the demo page.
+    </p>
+    {% endif %}
+
+    <h3>3.1 10-sample stress test: baseline vs. enhanced</h3>
+    <p class="muted">
+      Same 10 sentences as §2, each enhanced using one fixed source clip as
+      the prosody/duration reference — a <strong>stress test</strong> (forces
+      unrelated sentences toward one target duration, producing more extreme
+      stretch ratios than a real per-utterance run needs; §6.3's real
+      pipeline run needed no stretch at all). <strong>Important:</strong> the
+      "10/10 compliant" duration number below does not mean 10/10 sound
+      good — reading the round-trip transcriptions, 2 of the most-stretched
+      samples (ratio &lt; 0.5, over ~2x stretch) show clear failures
+      (non-Marathi gibberish, or an empty transcription). See
+      TECHNICAL_REPORT.md §6.5 for the full breakdown.
+    </p>
+    {% if 'research_comparison_10samples.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='research_comparison_10samples.png') }}" alt="10-sample baseline vs enhanced comparison">
+    {% else %}
+    <p class="missing-fig">
+      research_comparison_10samples.png not found — run
+      `python -m scripts.generate_research_comparison_10samples`.
+    </p>
+    {% endif %}
+
+    {% if research_10samples_rows %}
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Domain</th><th>Baseline F0 (Hz)</th><th>Enhanced F0 (Hz)</th>
+          <th>Ratio before</th><th>Ratio after</th><th>Stretched</th><th>Baseline</th><th>Enhanced</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in research_10samples_rows %}
+        <tr>
+          <td>{{ row.sample }}</td>
+          <td>{{ row.domain }}</td>
+          <td>{{ row.baseline_f0_mean_hz }}</td>
+          <td>{{ row.enhanced_f0_mean_hz }}</td>
+          <td>{{ row.duration_ratio_before }}</td>
+          <td>{{ row.duration_ratio_after }}</td>
+          <td>{{ row.stretch_applied }}</td>
+          <td><audio controls preload="none" style="width:150px;"><source src="{{ url_for('report_asset', dir_key='samples', filename=row.baseline_path.split('\\')[-1].split('/')[-1]) }}" type="audio/wav"></audio></td>
+          <td><audio controls preload="none" style="width:150px;"><source src="{{ url_for('report_asset', dir_key='research', filename=row.enhanced_path.split('\\')[-1].split('/')[-1]) }}" type="audio/wav"></audio></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="missing-fig">
+      No 10-sample research results found — run
+      `python -m scripts.generate_research_comparison_10samples`.
+    </p>
+    {% endif %}
+
+    <h3>3.2 Full formal evaluation (BLEU / chrF++ / MCD / F0-RMSE+correlation / ECAPA speaker similarity / duration compliance)</h3>
+    <p class="muted">
+      Same 10 samples, now scored against the <strong>real ground-truth
+      recording</strong> of the same speaker saying the same sentence
+      (confirmed present in the IISc SYSPIN dataset for all 10) — the
+      standard objective-TTS-eval setup, not just an internal baseline-vs-
+      enhanced ablation. BLEU/chrF++ reuse the round-trip ASR transcriptions
+      already shown above, scored against the known-correct target text.
+    </p>
+    <p class="muted">
+      <strong>Headline finding:</strong> enhanced is measurably
+      <em>worse</em> than baseline on 4 of 5 quality metrics — MCD, F0-RMSE,
+      F0 correlation, and ECAPA speaker similarity all degrade, the speaker
+      similarity drop is especially large (0.85 → 0.31). It only wins on
+      duration compliance, the one thing it directly targets. This is
+      consistent with §3.1's finding that the stress test's extreme stretch
+      ratios push the phase-vocoder well past graceful degradation — see
+      TECHNICAL_REPORT.md §6.6 for the full discussion, not just the chart.
+    </p>
+    {% if 'full_evaluation_10samples.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='full_evaluation_10samples.png') }}" alt="Full formal evaluation: baseline vs enhanced across 6 metrics">
+    {% else %}
+    <p class="missing-fig">
+      full_evaluation_10samples.png not found — run
+      `python -m scripts.run_full_evaluation`.
+    </p>
+    {% endif %}
+
+    {% if full_eval_rows %}
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Domain</th><th>BLEU (B/E)</th><th>chrF++ (B/E)</th>
+          <th>MCD dB (B/E)</th><th>F0-RMSE Hz (B/E)</th><th>F0-corr (B/E)</th>
+          <th>Speaker sim (B/E)</th><th>Dur ratio (B/E)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in full_eval_rows %}
+        <tr>
+          <td>{{ row.sample }}</td>
+          <td>{{ row.domain }}</td>
+          <td>{{ row.bleu_baseline }}/{{ row.bleu_enhanced }}</td>
+          <td>{{ row.chrf_baseline }}/{{ row.chrf_enhanced }}</td>
+          <td>{{ row.mcd_baseline_db }}/{{ row.mcd_enhanced_db }}</td>
+          <td>{{ row.f0_rmse_baseline_hz }}/{{ row.f0_rmse_enhanced_hz }}</td>
+          <td>{{ row.f0_corr_baseline }}/{{ row.f0_corr_enhanced }}</td>
+          <td>{{ row.speaker_sim_baseline }}/{{ row.speaker_sim_enhanced }}</td>
+          <td>{{ row.duration_ratio_baseline }}/{{ row.duration_ratio_enhanced }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if full_eval_summary %}
+    <table class="report-table">
+      <thead><tr><th>Corpus-level</th><th>Baseline</th><th>Enhanced</th></tr></thead>
+      <tbody>
+        <tr><td>Corpus BLEU</td><td>{{ "%.2f"|format(full_eval_summary.corpus_bleu_baseline) }}</td><td>{{ "%.2f"|format(full_eval_summary.corpus_bleu_enhanced) }}</td></tr>
+        <tr><td>Corpus chrF++</td><td>{{ "%.2f"|format(full_eval_summary.corpus_chrf_baseline) }}</td><td>{{ "%.2f"|format(full_eval_summary.corpus_chrf_enhanced) }}</td></tr>
+        <tr><td>Mean MCD (dB)</td><td>{{ "%.2f"|format(full_eval_summary.mean_mcd_db_baseline) }}</td><td>{{ "%.2f"|format(full_eval_summary.mean_mcd_db_enhanced) }}</td></tr>
+        <tr><td>Mean F0-RMSE (Hz)</td><td>{{ "%.1f"|format(full_eval_summary.mean_f0_rmse_hz_baseline) }}</td><td>{{ "%.1f"|format(full_eval_summary.mean_f0_rmse_hz_enhanced) }}</td></tr>
+        <tr><td>Mean F0 correlation</td><td>{{ "%.3f"|format(full_eval_summary.mean_f0_corr_baseline) }}</td><td>{{ "%.3f"|format(full_eval_summary.mean_f0_corr_enhanced) }}</td></tr>
+        <tr><td>Mean ECAPA speaker similarity</td><td>{{ "%.3f"|format(full_eval_summary.mean_speaker_sim_baseline) }}</td><td>{{ "%.3f"|format(full_eval_summary.mean_speaker_sim_enhanced) }}</td></tr>
+        <tr><td>Duration compliance rate</td><td>{{ "%.0f"|format(full_eval_summary.duration_compliance_rate_baseline * 100) }}%</td><td>{{ "%.0f"|format(full_eval_summary.duration_compliance_rate_enhanced * 100) }}%</td></tr>
+      </tbody>
+    </table>
+    {% endif %}
+    {% else %}
+    <p class="missing-fig">
+      No full evaluation results found — run
+      `python -m scripts.run_full_evaluation`.
+    </p>
+    {% endif %}
+
+    <h2>4. GUI screenshot</h2>
+    {% if 'gui_screenshot.png' in available_figures %}
+      <img class="report-fig" src="{{ url_for('report_asset', dir_key='figures', filename='gui_screenshot.png') }}" alt="GUI homepage screenshot">
+    {% else %}
+      <p class="missing-fig">gui_screenshot.png not found.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

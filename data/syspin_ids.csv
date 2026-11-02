@@ -1,0 +1,12 @@
+utterance_id,domain,role,file
+IISc_SYSPINProject_mr_f_AGRI_00004,agriculture,IndicF5 voice-cloning reference (all experiments),samples/syspin_utterances/IISc_SYSPINProject_mr_f_AGRI_00004.wav
+IISc_SYSPINProject_mr_f_AGRI_01470,agriculture,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_AGRI_01470.wav
+IISc_SYSPINProject_mr_f_BOOK_02165,books,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_BOOK_02165.wav
+IISc_SYSPINProject_mr_f_EDUC_02784,education,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_EDUC_02784.wav
+IISc_SYSPINProject_mr_f_EVAL_00246,evaluation,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_EVAL_00246.wav
+IISc_SYSPINProject_mr_f_FINA_00635,finance,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_FINA_00635.wav
+IISc_SYSPINProject_mr_f_GENE_01680,general,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_GENE_01680.wav
+IISc_SYSPINProject_mr_f_HEAL_00336,health,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_HEAL_00336.wav
+IISc_SYSPINProject_mr_f_OTHE_01721,others,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_OTHE_01721.wav
+IISc_SYSPINProject_mr_f_POLI_02661,politics,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_POLI_02661.wav
+IISc_SYSPINProject_mr_f_WEAT_02223,weather,TTS validation target / same-speaker ground truth (Table 6),samples/syspin_utterances/IISc_SYSPINProject_mr_f_WEAT_02223.wav

@@ -1,0 +1,103 @@
+# configs/hardware.yaml
+# ---------------------------------------------------------------------------
+# Central hardware/runtime budget for the whole s2st_en_mr project.
+# Every stage module (asr.py, mt.py, tts.py, and later prosody/isochrony/
+# speaker modules) reads its dtype, device, and cache settings from here
+# instead of hard-coding them, so the entire project can be re-tuned for a
+# different GPU (e.g. a Kaggle P100 16GB or a college server) by editing
+# ONE file.
+#
+# Target dev machine: Intel i7-12700H, 16 GB DDR5, RTX 3060 Laptop (6 GB VRAM).
+# ---------------------------------------------------------------------------
+
+device: "cuda"          # falls back to "cpu" automatically if CUDA unavailable
+vram_budget_gb: 6.0      # hard budget used by stage loaders to pick dtype/model size
+ram_budget_gb: 16.0
+
+# Sequential-loading discipline: the pipeline NEVER holds two stages resident
+# on GPU at the same time. Each stage must implement load()/unload() and the
+# pipeline calls torch.cuda.empty_cache() between stages. Do not flip this
+# off on a 6 GB card.
+sequential_stage_loading: true
+
+paths:
+  cache_dir: "./.cache/s2st_en_mr"        # HF hub cache + intermediate audio
+  prosody_feature_cache: "./.cache/s2st_en_mr/prosody_features"  # offline-extracted F0/energy/duration
+  manifests_dir: "./data_manifests"
+  logs_dir: "./logs"
+
+asr:
+  backend: "faster-whisper"
+  model_size: "small"          # "small" fits comfortably in 6GB; "medium" also OK int8_float16, "large-v3" will NOT fit alongside anything else -> flagged below
+  compute_type: "int8_float16"  # best fp16/int8 tradeoff on Ampere; falls back to "int8" on CPU
+  device_index: 0
+  beam_size: 5
+  vad_filter: true
+  language: "en"
+  # FLAG (bigger GPU): "large-v3" at float16 needs ~10GB alone; do not run
+  # it on this laptop concurrently with anything else. Use "medium" here
+  # and reserve "large-v3" for Kaggle P100 16GB / college server runs.
+
+mt:
+  backend: "indictrans2"
+  model_name: "ai4bharat/indictrans2-en-indic-dist-200M"
+  src_lang: "eng_Latn"
+  tgt_lang: "mar_Deva"
+  dtype: "fp16"                # 200M distilled model, fp16 is ~400MB, trivial on 6GB
+  max_new_tokens: 256
+  batch_size: 4
+  device: "cuda"
+
+tts:
+  backend: "indicf5"
+  model_name: "ai4bharat/IndicF5"
+  # fp16 is ignored by baseline/tts.py — IndicF5's own inference pipeline
+  # computes mel-spectrogram features in fp32 without autocast, so casting
+  # the model to fp16 crashes its vocoder (confirmed empirically). Stays
+  # fp32; still fits fine in 6GB since this stage is never GPU-resident
+  # alongside ASR/MT (sequential loading).
+  dtype: "fp32"
+  sample_rate: 24000
+  device: "cuda"
+  # FLAG (watch VRAM): IndicF5 + its reference-audio speaker encoder is the
+  # heaviest single stage. On 6GB it is fine IF it is the only stage
+  # resident (sequential discipline above). If you ever add batched TTS
+  # over many sentences at once, chunk the batch — do not raise batch_size
+  # here without testing peak VRAM first.
+  batch_size: 1
+
+prosody:
+  # NOTE: the keys below (torchcrepe, MFA aligner, mapping_model) describe the
+  # PLANNED learned prosody module, which is not implemented in this release.
+  # The implemented DSP baseline (prosody/transfer.py) uses WORLD (pyworld)
+  # and does not read these keys.
+  # Feature extraction below is OFFLINE / CPU-only preprocessing, run once
+  # via scripts/extract_prosody_dataset.py and cached to disk — never
+  # inside a training loop and never sharing GPU time with ASR/MT/TTS.
+  f0_extractor: "torchcrepe"   # alternative: "pyworld" (CPU-only, faster, slightly less accurate)
+  f0_device: "cuda"            # torchcrepe benefits from GPU; still tiny vs TTS/ASR
+  energy_extractor: "rms"
+  aligner: "mfa"                # alternative: "nemo_forced_aligner"
+  mapping_model_max_params: 30000000   # hard ceiling enforced in prosody/mapping_model.py
+
+isochrony:
+  max_duration_ratio_deviation: 0.15   # +/-15% vs source speech duration considered compliant
+
+training:
+  # NOTE: planned learned module only — no training is performed in this release.
+  # FLAG (bigger GPU): training the prosody mapping network on the full
+  # streamed dataset (even though the model itself is <30M params) is
+  # feasible on this laptop only with small batch sizes and streaming
+  # (datasets in streaming mode, no full corpus in 16GB RAM). Large-scale
+  # ablations / multi-seed runs should move to Kaggle P100 16GB or the
+  # college server.
+  batch_size: 8
+  num_workers: 2
+  streaming: true
+  mixed_precision: "fp16"
+
+gui:
+  server_name: "127.0.0.1"
+  server_port: 7860
+  share: false                 # no external hosting assumptions
+  preload_models_on_startup: false   # state.py loads/unloads per stage on demand

@@ -1,0 +1,11 @@
+sample,fleurs_id,en_config,mr_config,split,en_speaker_gender,en_duration_sec,en_file,mr_reference_file
+1,1904,en_us,mr_in,test,male,10.56,samples/real_translation_eval/english_source/01_fleurs_en_us_1904.wav,samples/real_translation_eval/marathi_reference/01_fleurs_mr_in_1904.wav
+2,1675,en_us,mr_in,test,male,8.76,samples/real_translation_eval/english_source/02_fleurs_en_us_1675.wav,samples/real_translation_eval/marathi_reference/02_fleurs_mr_in_1675.wav
+3,1950,en_us,mr_in,test,female,11.46,samples/real_translation_eval/english_source/03_fleurs_en_us_1950.wav,samples/real_translation_eval/marathi_reference/03_fleurs_mr_in_1950.wav
+4,1728,en_us,mr_in,test,female,5.76,samples/real_translation_eval/english_source/04_fleurs_en_us_1728.wav,samples/real_translation_eval/marathi_reference/04_fleurs_mr_in_1728.wav
+5,1972,en_us,mr_in,test,female,4.32,samples/real_translation_eval/english_source/05_fleurs_en_us_1972.wav,samples/real_translation_eval/marathi_reference/05_fleurs_mr_in_1972.wav
+6,1938,en_us,mr_in,test,male,11.42,samples/real_translation_eval/english_source/06_fleurs_en_us_1938.wav,samples/real_translation_eval/marathi_reference/06_fleurs_mr_in_1938.wav
+7,1876,en_us,mr_in,test,female,10.8,samples/real_translation_eval/english_source/07_fleurs_en_us_1876.wav,samples/real_translation_eval/marathi_reference/07_fleurs_mr_in_1876.wav
+8,1914,en_us,mr_in,test,female,6.96,samples/real_translation_eval/english_source/08_fleurs_en_us_1914.wav,samples/real_translation_eval/marathi_reference/08_fleurs_mr_in_1914.wav
+9,1846,en_us,mr_in,test,male,11.04,samples/real_translation_eval/english_source/09_fleurs_en_us_1846.wav,samples/real_translation_eval/marathi_reference/09_fleurs_mr_in_1846.wav
+10,1806,en_us,mr_in,test,female,9.9,samples/real_translation_eval/english_source/10_fleurs_en_us_1806.wav,samples/real_translation_eval/marathi_reference/10_fleurs_mr_in_1806.wav
